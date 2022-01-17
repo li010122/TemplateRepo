@@ -1,0 +1,34 @@
+
+# Repo: MySpace/TemplateRepo
+# File: ci_template.yml
+
+parameters:
+- name: pylint_threshold
+  type: string
+  default: 8.0
+- name: lint_folder
+  type: string
+  default: "mockcase-on-test"
+  
+jobs:
+- job:
+  displayName: yamllint_checks
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - script: |
+      python -m pip install --upgrade pip
+      pip install yamllint
+      yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}, new-line-at-end-of-file: disable, new-lines: disable}}" .
+    displayName: 'YAML Lint Checks'
+    
+- job:
+  displayName: pylint_checks
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - script: |
+      pip install pylint-fail-under pylint-junit
+      export PATH="/home/pipeuser/.local/bin":$PATH
+      pylint-fail-under --fail_under ${{parameters.pylint_threshold}} --output-format=colorized ${{ parameters.lint_folder}}
+    displayName: 'Pylint fail under ${{ parameters.pylint_threshold }}'
